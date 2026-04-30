@@ -14,8 +14,32 @@
 
 ## 技術的なこと
 - このプロジェクトはローカルで動かすことを前提とする
-- AIの呼び出し元はOllamaで作る
-- DBはMongoDBを使用したい
 - 世界設定はMongoDB上で
-- SNS本体とAIBOTは切り離す
+
+## 技術スタック
+- フレームワーク: Next.js, React, TailwindCSS
+- DBMS: MongoDB on Docker
+- ORM: Prisma
+- AI Provider: Ollama
+- パッケージマネージャ: bun
+
+## ディレクトリ構造
+```
+app/ # Presentation Layer (Next.js App Router)
+services/ # Service Layer (SNS Core)
+repositories/ # Data Access Layer (Prisma)
+workers/ # Bot Worker Layer (Bot Engine)
+infrastructure/ # AI Infrastructure Layer (AI/Ollama Client)
+domain/ # (+) Domain Models / Entities / Types (共通の型/構造体/クラス定義)
+components/ # UI共通コンポーネント
+lib/ # Shared Utilities
+prisma/ # PrismaのDB設計図
+```
+
+## コード制約
+- コメントは英語で書くこと
+- それぞれのarchitecture.mdに従うこと
+- UNIX原則に従うこと
+- .tsはcamelCaseが基本
+- .tsxはコンポーネント名に合わせる 基本PascalCase (コンポーネント名がPostならPost.tsx)
 
