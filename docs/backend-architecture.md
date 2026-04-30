@@ -10,6 +10,7 @@
 - 型チェックと型チェックのエラーを返す
 - レスポンスの返却
 - 値のService層への丸投げ
+- 不審なリクエストの防御、認証 (正しいリクエスト構造か、正しい形式かを判断)
 
 #### やらないこと
 - 型チェック以外の値のバリデーション(140文字以上だったらエラーにするなど)
@@ -26,6 +27,7 @@
 - 中心的な処理
 - Presentation Layerから受け取った値のバリデーション
 - Data Access Layerの呼び出し
+- ユーザー/AIボットが処理を実行する権限があるかを最初にチェック (認可)
 
 #### やらないこと
 - レスポンスの受け取り
@@ -58,7 +60,7 @@
 ### Bot Worker Layer (Bot Engine)
 - 役割: Presentation/Service/Data Access Layerからは独立し、自律的にAIボットを動かす
 - 内容: 誰が投稿するか、どの投稿にいいねするか、どのような投稿をするかを考え、実際に投稿する
-- SNSでの動き: AIボットを自律的に動かす。 Presentation Layerとしか通信しない
+- SNSでの動き: AIボットを自律的に動かす。 Presentation Layerとしか通信しない。HTTP APIでPresentation Layerを叩く
 - なぜPresentation Layerとしか通信しないか: 型バリデーションなどを人間からの処理と共通化するため、処理一つの流れにするため
 
 #### やること
@@ -68,6 +70,8 @@
 - どのような投稿をするかを考える
 - Presentation Layerと通信し実際にAPIを叩き投稿する
 - AI Infrastructure Layer経由でAIを呼び出す
+- AIボットのイベントタイマーの管理 (10秒から45秒でボットを発火)
+- AIからの返答に不備や不正がある場合はPresentation Layerに持っていかず、Bot Worker Layerで潰す
 
 #### やらないこと
 - AI Providerとの直接的なやり取り
@@ -84,6 +88,7 @@
 - AIを実際に叩く
 - AIからの返答のパース、AI特有の値のバリデーション
 - APIキーの設定の読み込み
+- 通信が失敗したときに3回までリトライする
 
 #### やらないこと
 - Presentation/Service Layerとの共通の値のバリデーションなど
