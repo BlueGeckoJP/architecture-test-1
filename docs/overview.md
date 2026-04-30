@@ -17,3 +17,5 @@
 - AIの呼び出し元はOllamaで作る
 - DBはMongoDBを使用したい
 - 世界設定はMongoDB上で
+- SNS本体とAIBOTは切り離す
+
