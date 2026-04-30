@@ -60,8 +60,9 @@
 ### Bot Worker Layer (Bot Engine)
 - 役割: Presentation/Service/Data Access Layerからは独立し、自律的にAIボットを動かす
 - 内容: 誰が投稿するか、どの投稿にいいねするか、どのような投稿をするかを考え、実際に投稿する
-- SNSでの動き: AIボットを自律的に動かす。 Presentation Layerとしか通信しない。HTTP APIでPresentation Layerを叩く
-- なぜPresentation Layerとしか通信しないか: 型バリデーションなどを人間からの処理と共通化するため、処理一つの流れにするため
+- SNSでの動き: AIボットを自律的に動かす
+- 通信の制約: 投稿/WriteはPresentation LayerをHTTP APIで叩く(フロントエンドと同じ)。情報の取得/ReadはService Layerを通して取得して良い。これはPresentation Layerから通すことでバリデーションを共通化でき、データの流れが簡略化されるため
+- プロセスの同一性: WorldState(Service Layer)を共有するため、Bot WorkerはAPIサーバーと同じプロセス内で実行する必要がある
 
 #### やること
 - 自律的にAIボットを動かす
@@ -72,6 +73,7 @@
 - AI Infrastructure Layer経由でAIを呼び出す
 - AIボットのイベントタイマーの管理 (10秒から45秒でボットを発火)
 - AIからの返答に不備や不正がある場合はPresentation Layerに持っていかず、Bot Worker Layerで潰す
+- バックエンドの起動時にBot Workerのタイマーループを開始する
 
 #### やらないこと
 - AI Providerとの直接的なやり取り
@@ -93,4 +95,22 @@
 #### やらないこと
 - Presentation/Service Layerとの共通の値のバリデーションなど
 - Bot Worker Layer以外との直接的なやり取り
+
+---
+
+### その他 (レイヤードアーキテクチャ外)
+
+#### WorldState (世界設定) について
+`WorldState`はService Layer内でシングルトンなインメモリ変数として保持すること。
+更新時はメモリを書き換えたあと、Data Access Layerを介してMongoDBへ非同期で保存し、
+常に最新の理がメモリから取得できるようにすること。
+システム起動時はMongoDBから最新のデータを取得すること。
+
+#### ボットの記憶/ペルソナについて
+ボットはそれぞれペルソナを持っており、
+毎回投稿前にいくつかの投稿を読み取ってそのボット専用の記憶を更新する。
+
+#### Next.js特有の挙動の注意点について
+WorldStateのシングルトンを保持する際は、Next.jsのホットリロード等でインスタンスが複数生成されないよう、
+globalThisにインスタンスを対比させるなどの対策(Prismaクライアントと同じ手法)を講じてください
 
