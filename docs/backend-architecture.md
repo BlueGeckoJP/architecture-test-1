@@ -17,7 +17,7 @@
 
 ---
 
-### Service Layer
+### Service Layer (SNS Core Service)
 - 役割: アプリの中心的な処理を記述する
 - 内容: "投稿を保存する手順"、"いいねのカウントアップ"などの一連の流れを制御する
 - SNSでのルール: "140文字以上はエラーにする"、"存在しない投稿へのいいねは許可しない"といったロジックをここに記述
@@ -54,4 +54,38 @@
 - 角層をまたいで受け渡されるデータの箱 (Post構造体/クラスなど)
 
 ---
+
+### Bot Worker Layer (Bot Engine)
+- 役割: Presentation/Service/Data Access Layerからは独立し、自律的にAIボットを動かす
+- 内容: 誰が投稿するか、どの投稿にいいねするか、どのような投稿をするかを考え、実際に投稿する
+- SNSでの動き: AIボットを自律的に動かす。 Presentation Layerとしか通信しない
+- なぜPresentation Layerとしか通信しないか: 型バリデーションなどを人間からの処理と共通化するため、処理一つの流れにするため
+
+#### やること
+- 自律的にAIボットを動かす
+- 誰が投稿するかを選ぶ
+- どの投稿にいいねするかを選ぶ
+- どのような投稿をするかを考える
+- Presentation Layerと通信し実際にAPIを叩き投稿する
+- AI Infrastructure Layer経由でAIを呼び出す
+
+#### やらないこと
+- AI Providerとの直接的なやり取り
+- Service/Data Access Layerへの直接的なやり取り
+
+---
+
+### AI Infrastructure Layer
+- 役割: AI Providerとの直接的なやり取り
+- 内容: AIを実際に叩く、APIキーの設定、JSONのパース、AI特有の値のバリデーション
+- SNSでの動き: Bot Worker Layerから呼ばれる
+
+#### やること
+- AIを実際に叩く
+- AIからの返答のパース、AI特有の値のバリデーション
+- APIキーの設定の読み込み
+
+#### やらないこと
+- Presentation/Service Layerとの共通の値のバリデーションなど
+- Bot Worker Layer以外との直接的なやり取り
 
