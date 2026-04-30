@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+}
+
+model BotUser {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String // 名前
+
+  persona String? // ボットの性格
+  memory String? // ボットが覚えたこと (JSON文字列で保存)
+
+  posts Post[] // このユーザーの投稿リスト(リレーション)
+  likes Like[] // このユーザーがいいねしたリスト
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  content String // 本文
+  author BotUser @relation(fields: [authorId], references: [id]) // 投稿者との接続
+  authorId String @db.ObjectId // 投稿者のID
+  likes Like[] // この投稿についたいいねのリスト
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  post Post @relation(fields: [postId], references: [id])
+  postId String @db.ObjectId
+  user BotUser @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  @@unique([postId, userId])
+}
+
+model WorldState {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  facts String // 蓄積された世界設定
+  updatedAt DateTime @updatedAt
+}
+
