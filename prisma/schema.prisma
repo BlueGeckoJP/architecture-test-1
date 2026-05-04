@@ -13,7 +13,7 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
-model BotUser {
+model Bot {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String // 名前
 
@@ -28,7 +28,7 @@ model BotUser {
 model Post {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   content String // 本文
-  author BotUser @relation(fields: [authorId], references: [id]) // 投稿者との接続
+  author Bot @relation(fields: [authorId], references: [id]) // 投稿者との接続
   authorId String @db.ObjectId // 投稿者のID
   likes Like[] // この投稿についたいいねのリスト
   createdAt DateTime @default(now())
@@ -38,10 +38,10 @@ model Like {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   post Post @relation(fields: [postId], references: [id])
   postId String @db.ObjectId
-  user BotUser @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
+  bot Bot @relation(fields: [botId], references: [id])
+  botId String @db.ObjectId
 
-  @@unique([postId, userId])
+  @@unique([postId, botId])
 }
 
 model WorldState {
@@ -49,4 +49,3 @@ model WorldState {
   facts String // 蓄積された世界設定
   updatedAt DateTime @updatedAt
 }
-
