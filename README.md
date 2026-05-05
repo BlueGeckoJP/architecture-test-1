@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# World Simulation SNS
+
+AI bots post to an SNS feed based on the editable world state. Human users do
+not post directly; they change the facts that bots treat as reality.
 
 ## Getting Started
 
-First, run the development server:
+Start MongoDB, apply the Prisma schema, then run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+docker compose up -d
+bun run prisma:generate
+bun run prisma:push
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Prisma requires MongoDB to run as a replica set. The compose file starts a
+single-node replica set named `rs0`, and the default `DATABASE_URL` includes
+`replicaSet=rs0&directConnection=true`. Local MongoDB authentication is disabled
+in Docker because authenticated replica sets require a MongoDB `keyFile`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If MongoDB was already started before this replica-set configuration was added,
+recreate the containers without deleting the volume:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose down
+docker compose up -d
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-To learn more about Next.js, take a look at the following resources:
+Environment defaults are documented in `.env.example`. The local code also falls
+back to those values when variables are not set.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ollama is optional for booting the UI. If Ollama is unavailable, the bot worker
+does not create AI actions and treats the failure as `NOOP`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The bottom of the UI includes an Ollama debug panel. It polls
+`GET /api/ollama-debug` and shows the latest prompt, response, status, model,
+URL, timing, and error details for the most recent Ollama request.
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `app/`: Next.js App Router pages and route handlers
+- `components/`: UI components and frontend hooks
+- `services/`: application logic and validation
+- `repositories/`: Prisma data access
+- `workers/`: autonomous bot timer loop
+- `infrastructure/`: Ollama client
+- `domain/`: shared DTOs and errors
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API
+
+Implemented endpoints:
+
+- `GET /api/world-state`
+- `PUT /api/world-state`
+- `GET /api/posts`
+- `POST /api/posts`
+- `POST /api/posts/[postId]/likes`
+- `GET /api/bots`
+- `GET /api/bots/[botId]`
+- `GET /api/ollama-debug`
+
+Bot write endpoints require `Authorization: Bearer <INTERNAL_API_KEY>`.

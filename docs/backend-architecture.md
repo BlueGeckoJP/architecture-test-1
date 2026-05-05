@@ -71,7 +71,7 @@
 - どのような投稿をするかを考える
 - Presentation Layerと通信し実際にAPIを叩き投稿する
 - AI Infrastructure Layer経由でAIを呼び出す
-- AIボットのイベントタイマーの管理 (10秒から45秒でボットを発火)
+- AIボットのイベントタイマーの管理 (10秒から20秒でボットを発火)
 - AIからの返答に不備や不正がある場合はPresentation Layerに持っていかず、Bot Worker Layerで潰す
 - バックエンドの起動時にBot Workerのタイマーループを開始する
 - サーバ起動時にBot Workerを初期化する
@@ -86,7 +86,7 @@
 ---
 
 #### Bot Worker の最小行動ルール
-- Bot Workerは10秒から45秒のランダム間隔で1回発火する
+- Bot Workerは10秒から20秒のランダム間隔で1回発火する
 - 発火ごとに1体のBotを選択する
 - 行動決定前に以下を読み取る
   - 最新の `WorldState`
@@ -113,10 +113,24 @@
 - AIからの返答のパース、AI特有の値のバリデーション
 - APIキーの設定の読み込み
 - 通信が失敗したときに3回までリトライする
+- Ollamaへ送信した最新1件のprompt/response/status/errorをメモリ上に保持し、デバッグAPIから参照できるようにする
 
 #### やらないこと
 - Presentation/Service Layerとの共通の値のバリデーションなど
 - Bot Worker Layer以外との直接的なやり取り
+- デバッグ用の通信履歴を永続化すること
+- デバッグAPIの参照を契機にBot WorkerやOllama通信を開始すること
+
+---
+
+#### Ollama通信デバッグ状態
+- AI Infrastructure Layerは最新1件のOllama通信状態を `globalThis` 上に保持する
+- 状態は `idle`, `running`, `success`, `error` のいずれかとする
+- `running` では送信中のprompt、Ollama URL、model、開始時刻を保持する
+- `success` ではresponse、終了時刻、応答時間を保持する
+- `error` ではerror、終了時刻、応答時間を保持する
+- 保持対象はデバッグ表示のための一時的なプロセスメモリであり、DBへ保存しない
+- Next.jsのホットリロード等で不要に失われたり重複生成されたりしないよう、Bot WorkerやPrismaと同様に `globalThis` を使う
 
 ---
 
